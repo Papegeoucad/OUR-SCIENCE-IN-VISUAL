@@ -60,14 +60,14 @@
   .masthead{
     background:var(--paper);
     border-bottom:1px solid var(--line);
-    padding:0.9rem 1.5rem;
+    padding:0.7rem 1.5rem;
   }
   .masthead-inner{
     max-width:920px; margin:0 auto;
-    display:flex; align-items:center; gap:0.9rem;
+    display:flex; align-items:center; gap:1rem;
   }
-  .masthead img{height:32px; width:auto; display:block;}
-  .masthead .divider{width:1px; height:22px; background:var(--line);}
+  .masthead img{height:52px; width:auto; display:block;}
+  .masthead .divider{width:1px; height:30px; background:var(--line);}
   .masthead span.tag{
     font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
     letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft);
@@ -139,6 +139,21 @@
   nav.directory a:last-child{border-right:none;}
   nav.directory a:hover{background:var(--wall-deep); color:var(--ink);}
   nav.directory a .roman{color:var(--brass); margin-right:0.5em; font-weight:600;}
+  nav.directory a.current{
+    background:var(--charcoal); color:#F4F1E8;
+  }
+  nav.directory a.current .roman{color:var(--brass-bright);}
+
+  /* ---------- PANELS (tab-style show/hide) ---------- */
+  .panel{display:none;}
+  .panel.active{display:block; animation:panelIn 0.25s ease;}
+  @keyframes panelIn{
+    from{opacity:0; transform:translateY(6px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .panel.active{animation:none;}
+  }
 
   /* ---------- WALL TEXT (intro) ---------- */
   .wall-text{
@@ -375,14 +390,15 @@
 
 <nav class="directory">
   <div class="directory-inner">
-    <a href="#general-resources"><span class="roman">I</span>General Resources</a>
-    <a href="#poster"><span class="roman">II</span>Poster</a>
-    <a href="#graphical-abstract"><span class="roman">III</span>Graphical Abstract</a>
-    <a href="#infographic"><span class="roman">IV</span>Infographic</a>
+    <a href="#home" data-target="home"><span class="roman">&#9670;</span>Lobby</a>
+    <a href="#general-resources" data-target="general-resources"><span class="roman">I</span>General Resources</a>
+    <a href="#poster" data-target="poster"><span class="roman">II</span>Poster</a>
+    <a href="#graphical-abstract" data-target="graphical-abstract"><span class="roman">III</span>Graphical Abstract</a>
+    <a href="#infographic" data-target="infographic"><span class="roman">IV</span>Infographic</a>
   </div>
 </nav>
 
-<div class="wall-text">
+<div class="wall-text panel" id="home">
   <span class="eyebrow">Project Overview</span>
   <!-- ================================================================
        EDIT ZONE — Project overview (3 paragraphs)
@@ -396,7 +412,7 @@
 </div>
 
 <!-- ROOM I : GENERAL RESOURCES -->
-<section class="room" id="general-resources">
+<section class="room panel" id="general-resources">
   <div class="room-head"><span class="roman-num">ROOM I</span><h2>General Resources</h2></div>
 
   <!-- ==================================================================
@@ -529,7 +545,7 @@
 </section>
 
 <!-- ROOM II : POSTER -->
-<section class="room" id="poster">
+<section class="room panel" id="poster">
   <div class="room-head"><span class="roman-num">ROOM II</span><h2>Poster</h2></div>
   <div class="exhibit">
     <figure class="frame">
@@ -601,7 +617,7 @@
 </section>
 
 <!-- ROOM III : GRAPHICAL ABSTRACT -->
-<section class="room" id="graphical-abstract">
+<section class="room panel" id="graphical-abstract">
   <div class="room-head"><span class="roman-num">ROOM III</span><h2>Graphical Abstract</h2></div>
   <div class="exhibit reverse">
     <figure class="frame">
@@ -676,7 +692,7 @@
 </section>
 
 <!-- ROOM IV : INFOGRAPHIC -->
-<section class="room" id="infographic">
+<section class="room panel" id="infographic">
   <div class="room-head"><span class="roman-num">ROOM IV</span><h2>Infographic</h2></div>
   <div class="exhibit">
     <figure class="frame">
@@ -714,6 +730,49 @@
     <!-- END EDIT ZONE -->
   </div>
 </footer>
+
+<script>
+(function(){
+  var VALID = ['home','general-resources','poster','graphical-abstract','infographic'];
+  var nav = document.querySelector('nav.directory');
+
+  function showPanel(id, opts){
+    opts = opts || {};
+    if (VALID.indexOf(id) === -1) id = 'home';
+
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+    var panel = document.getElementById(id);
+    if (panel) panel.classList.add('active');
+
+    document.querySelectorAll('nav.directory a').forEach(function(a){ a.classList.remove('current'); });
+    var link = document.querySelector('nav.directory a[data-target="' + id + '"]');
+    if (link) link.classList.add('current');
+
+    if (!opts.skipScroll && nav){
+      var y = nav.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({top: y, behavior: opts.instant ? 'auto' : 'smooth'});
+    }
+  }
+
+  document.querySelectorAll('nav.directory a').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var id = a.getAttribute('data-target');
+      if (history.pushState) { history.pushState(null, '', '#' + id); }
+      else { window.location.hash = id; }
+      showPanel(id);
+    });
+  });
+
+  window.addEventListener('popstate', function(){
+    var id = window.location.hash.replace('#', '') || 'home';
+    showPanel(id, {instant:true});
+  });
+
+  var initial = window.location.hash.replace('#', '') || 'home';
+  showPanel(initial, {skipScroll:true});
+})();
+</script>
 
 </body>
 </html>
